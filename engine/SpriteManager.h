@@ -18,6 +18,8 @@ public:
     sf::Sprite& GetSprite(SpriteID id);
 
 private:
+    std::vector<sf::Sprite> mSprites;
+    std::unordered_map<std::string, sf::Texture> mTextures;
 };
 
 }  // namespace ECSEngine
