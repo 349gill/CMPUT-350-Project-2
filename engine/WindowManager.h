@@ -34,6 +34,9 @@ public:
 
 private:
     std::shared_ptr<sf::RenderWindow> mWindow;
+    Point2D mWorldCenter;
+    float mWorldUnitsPerPixel;
+    Point2D GetWindowCenter() const;
 };
 
 }  // namespace ECSEngine
