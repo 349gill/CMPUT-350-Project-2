@@ -1,0 +1,2 @@
+/usr/bin/ar qc ../sfml-build/lib/libfreetyped.a CMakeFiles/freetype.dir/Unity/unity_0_c.c.o CMakeFiles/freetype.dir/src/pfr/pfr.c.o CMakeFiles/freetype.dir/src/smooth/smooth.c.o
+/usr/bin/ranlib ../sfml-build/lib/libfreetyped.a

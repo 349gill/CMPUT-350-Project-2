@@ -1,0 +1,2 @@
+/usr/bin/ar qc ../sfml-build/lib/libharfbuzzd.a CMakeFiles/harfbuzz.dir/src/harfbuzz.cc.o
+/usr/bin/ranlib ../sfml-build/lib/libharfbuzzd.a
