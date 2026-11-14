@@ -1,0 +1,3 @@
+/Users/salabdoulaye/Documents/cmput_350/project/CMPUT-350-Project-2/build/_deps/sfml-subbuild/CMakeFiles/sfml-populate.dir
+/Users/salabdoulaye/Documents/cmput_350/project/CMPUT-350-Project-2/build/_deps/sfml-subbuild/CMakeFiles/edit_cache.dir
+/Users/salabdoulaye/Documents/cmput_350/project/CMPUT-350-Project-2/build/_deps/sfml-subbuild/CMakeFiles/rebuild_cache.dir

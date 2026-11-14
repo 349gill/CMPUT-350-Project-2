@@ -1,0 +1,2 @@
+/usr/bin/ar qc ../../../sfml-build/lib/libFLACd.a CMakeFiles/FLAC.dir/Unity/unity_0_c.c.o CMakeFiles/FLAC.dir/fixed.c.o CMakeFiles/FLAC.dir/fixed_intrin_sse2.c.o CMakeFiles/FLAC.dir/fixed_intrin_ssse3.c.o CMakeFiles/FLAC.dir/fixed_intrin_sse42.c.o CMakeFiles/FLAC.dir/format.c.o CMakeFiles/FLAC.dir/lpc.c.o CMakeFiles/FLAC.dir/metadata_object.c.o CMakeFiles/FLAC.dir/stream_decoder.c.o CMakeFiles/FLAC.dir/stream_encoder.c.o CMakeFiles/FLAC.dir/window.c.o
+/usr/bin/ranlib ../../../sfml-build/lib/libFLACd.a

@@ -1,0 +1,2 @@
+/usr/bin/ar qc ../sfml-build/lib/liboggd.a CMakeFiles/ogg.dir/Unity/unity_0_c.c.o
+/usr/bin/ranlib ../sfml-build/lib/liboggd.a

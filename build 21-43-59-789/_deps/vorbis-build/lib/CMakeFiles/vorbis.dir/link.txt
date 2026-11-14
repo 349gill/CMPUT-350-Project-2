@@ -1,0 +1,2 @@
+/usr/bin/ar qc ../../sfml-build/lib/libvorbisd.a CMakeFiles/vorbis.dir/Unity/unity_0_c.c.o CMakeFiles/vorbis.dir/floor1.c.o CMakeFiles/vorbis.dir/sharedbook.c.o
+/usr/bin/ranlib ../../sfml-build/lib/libvorbisd.a
