@@ -16,10 +16,16 @@ namespace ECSEngine {
 // - collision bounding boxes
 struct LocationComponent {
     Point2D loc;
+    LocationComponent(float x = 0.f, float y = 0.f){
+        loc = {x, y};
+    }
 };
 
 struct MovementComponent {
     Point2D velocity;  // Velocity in pixels per second
+    MovementComponent(float dx = 0, float dy = 0) {
+        velocity = {dx, dy};
+    }
 };
 
 struct GravityComponent {
@@ -32,6 +38,9 @@ struct GravityComponent {
 // location for respawning
 struct RespawnComponent {
     Point2D loc;
+    RespawnComponent(Point2D spawnPoint = {0.f, 0.f}) {
+        loc = spawnPoint;
+    }
 };
 
 }  // namespace ECSEngine

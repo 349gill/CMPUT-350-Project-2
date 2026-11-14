@@ -17,6 +17,11 @@ public:
     SpriteID textureID;
     Rect bounds;
     bool worldSpace;  // If false, this sprite is drawn in screen space instead of world space
+    SpriteComponent(SpriteID id, Rect bound, bool world){
+        textureID = id;
+        bounds = bound;
+        worldSpace = world;
+    } 
 private:
 };
 
