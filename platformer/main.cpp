@@ -36,18 +36,16 @@ using ECSEngine::Point2D;
 using ECSEngine::Rect;
 using ECSEngine::SpriteID;
 
-const std::string kPlayerSheet = "spritesheet-characters-default.png";
-const Rect kPlayerSource = {{22.0f, 106.0f}, 100, 128}; // Position of the player
+const std::string kPlayerSheet = "player.png";
+const Rect kPlayerSource = {{0.0f, 0.0f}, 0, 0}; // 0 size = use the whole image
 const Rect kPlayerBounds = {{0.0f, 0.0f}, 48, 64}; // Player sprite bounds
 const Rect kPlayerCollision = {{6.0f, 4.0f}, 36, 60}; // Player collision box
 const Point2D kPlayerStart(800.0f, 500.0f);
 const float kGravity = 1.0f;
 
-const std::string kStarSheet = "spritesheet-tiles-default.png";
-const Rect kStarSource = {{896.0f, 448.0f}, 64, 64}; // Star position
+const std::string kStarSheet = "star.png";
+const Rect kStarSource = {{0.0f, 0.0f}, 0, 0}; // 0 size = use the whole image
 const Rect kStarBounds = {{0.0f, 0.0f}, 48, 48}; // Star sprite bounds
-
-const std::string kDigitSheet = "spritesheet-tiles-default.png";
 
 const char kSpikeChar = 'x';
 const char kSpawnerChar = 'S';
@@ -145,10 +143,10 @@ int main(int argc, char* argv[]) {
 
     // Load sounds
     auto& sounds = engine.GetSoundManager();
-    sounds.RegisterSound(gResourcePath + "jump.ogg", "jump");
-    sounds.RegisterSound(gResourcePath + "land.ogg", "land");
-    sounds.RegisterSound(gResourcePath + "star.ogg", "star");
-    sounds.RegisterSound(gResourcePath + "wall.ogg", "wall");
+    sounds.RegisterSound(gResourcePath + "sfx_jump.ogg", "jump");
+    sounds.RegisterSound(gResourcePath + "sfx_bump.ogg", "land");
+    sounds.RegisterSound(gResourcePath + "sfx_coin.ogg", "star");
+    sounds.RegisterSound(gResourcePath + "sfx_bump.ogg", "wall");
 
     // Load maps
     gStarSprite = sprites.RegisterTexture(gResourcePath + kStarSheet, kStarSource);
@@ -177,7 +175,7 @@ int main(int argc, char* argv[]) {
     score.score = 0;
     for (int i = 0; i < 10; i++) {
         score.digitTextureID[i] = sprites.RegisterTexture(
-            gResourcePath + kDigitSheet, Rect{{832.0f, 990.0f - i * 64.0f}, 64, 64});
+            gResourcePath + "hud_character_" + std::to_string(i) + ".png", Rect{{0.0f, 0.0f}, 0, 0});
     }
 
     for (int i = 0; i < 3; i++) {
