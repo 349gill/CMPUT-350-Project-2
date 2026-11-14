@@ -18,6 +18,19 @@ struct CollisionComponent {
     uint8_t onRightWall : 1;
     Rect collisionBox;          // The bounding box for collision detection
     Rect previousCollisionBox;  // The previous bounding box for collision detection
+
+    CollisionComponent() {
+        staticEntity = 0;
+        doesDamage = 0;
+        onGround = 0;
+        onCeiling = 0;
+        onLeftWall = 0;
+        onRightWall = 0;
+        collisionBox = {};
+        previousCollisionBox = {};
+    }
 };
+
+
 
 }  // namespace ECSEngine
