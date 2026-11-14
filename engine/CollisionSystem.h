@@ -1,5 +1,15 @@
 #pragma once
 
+#include <algorithm>
+#include <string>
+
+#include "CollisionComponent.h"
+#include "InputComponent.h"
+#include "LocationComponent.h"
+#include "ScoreComponent.h"
+#include "SoundManager.h"
+#include "SystemManager.h"
+
 namespace ECSEngine {
 
 template <typename... Components>
@@ -10,41 +20,41 @@ public:
         return name;
     }
 
-    tSystemReturn Run(EngineView<Components...>* engine) override { 
+    tSystemReturn Run(EngineView<Components...>* engine) override {
         auto& entManager = engine->GetEntityManager();
 
         for (const auto& entity : entManager) {
             EntityID id = entity.GetID();
 
-            if (!entManager.HasComponent<CollisionComponent>(id) || !entManager.HasComponent<LocationComponent>(id)) {
+            if (!entManager.template HasComponent<CollisionComponent>(id) || !entManager.template HasComponent<LocationComponent>(id) ||
+                !entManager.template HasComponent<MovementComponent>(id)) {
                 continue;
             }
 
-            CollisionComponent& boxA = entManager.GetComponent<CollisionComponent>(id);
-
+            CollisionComponent& boxA = entManager.template GetComponent<CollisionComponent>(id);
+            if (boxA.staticEntity) {
+                continue;
+            }
+            bool wasOnGround = boxA.onGround;
             boxA.onCeiling = false;
             boxA.onGround = false;
             boxA.onLeftWall = false;
             boxA.onRightWall = false;
 
-            LocationComponent& locA = entManager.GetComponent<LocationComponent>(id);
-            MovementComponent& moveA = entManager.GetComponent<MovementComponent>(id);
+            LocationComponent& locA = entManager.template GetComponent<LocationComponent>(id);
+            MovementComponent& moveA = entManager.template GetComponent<MovementComponent>(id);
+            bool isPlayer = entManager.template HasComponent<InputComponent>(id);
+            float rest = isPlayer ? 0.f : -0.8f;  // stars bounce and lose speed
 
-            for (const auto& entity : entManager) {
-                EntityID id2 = entity.GetID();
+            for (const auto& other : entManager) {
+                EntityID id2 = other.GetID();
 
-                if (!entManager.HasComponent<CollisionComponent>(id2) || !entManager.HasComponent<LocationComponent>(id2) || id == id2) {
+                if (id == id2 || !entManager.template HasComponent<CollisionComponent>(id2) || !entManager.template HasComponent<LocationComponent>(id2)) {
                     continue;
                 }
-                
-                CollisionComponent& boxB = entManager.GetComponent<CollisionComponent>(id2);
 
-                LocationComponent& locB = entManager.GetComponent<LocationComponent>(id2);
-
-                MovementComponent& moveB = entManager.GetComponent<MovementComponent>(id2);
-
-
-                
+                CollisionComponent& boxB = entManager.template GetComponent<CollisionComponent>(id2);
+                LocationComponent& locB = entManager.template GetComponent<LocationComponent>(id2);
 
                 Rect rectA = boxA.collisionBox;
                 Rect rectB = boxB.collisionBox;
@@ -65,112 +75,83 @@ public:
                 float bTop = rectB.topLeft.y;
                 float bBottom = bTop + rectB.height;
 
-                bool overlapX = aLeft < bRight && aRight > bLeft;
-                bool overlapY = aTop < bBottom && aBottom > bTop;
+                if (!(aLeft < bRight && aRight > bLeft && aTop < bBottom && aBottom > bTop)) {
+                    continue;
+                }
 
-                if (overlapX && overlapY) {
-                    float overX = std::min(aRight, bRight) - std::max(aLeft, bLeft);
-                    float overY = std::min(aBottom, bBottom) - std::max(aTop, bTop); 
+                float overX = std::min(aRight, bRight) - std::max(aLeft, bLeft);
+                float overY = std::min(aBottom, bBottom) - std::max(aTop, bTop);
 
-                    enum side  {LEFT, RIGHT, UP, DOWN};
-                    // determine where collieds
-                    CollisionComponent prevA = boxA.previousCollisionBox;
-                    if (prevA.collisionBox.topLeft.y + prevA.collisionBox.height <= bTop){
-                        side colType = UP;
-                    }
-                    else if (prevA.collisionBox.topLeft.y >= bBottom){
-                        side colType = DOWN;
-                    }
-                    else if (prevA.collisionBox.topLeft.x + prevA.collisionBox.width <= bLeft){
-                        side colType = RIGHT;
-                    }
-                    else if (prevA.collisionBox.topLeft.x >= bRight){
-                        side colType = LEFT;
-                    }
+                if (boxB.doesDamage && entManager.template HasComponent<RespawnComponent>(id)) {
+                    locA.loc = entManager.template GetComponent<RespawnComponent>(id).loc;
+                    moveA.velocity = Point2D(0.f, 0.f);
+                    break;
+                }
 
-                    // if A is dynamic and B static
-                    if (!boxA.staticEntity && boxB.staticEntity) {
-                        switch (side) {
-                            case DOWN {
-                                locA.loc.y += overY;
-                                moveA.velocity.y = 0.f;
-                                boxA.onCeiling = true;
-                            },
-                            case UP {
-                                locA.loc.y -= overY;
-                                moveA.velocity.y = 0.f;
-                                boxA.onGround = true;
-                            },
-                            case RIGHT {
-                                locA.loc.x -= overX;
-                                moveA.velocity.x = 0.f;
-                                boxA.onRightWall = true;
-                            },
-                            case LEFT {
-                                locA.loc.x += overX;
-                                moveA.velocity.x = 0.f;
-                                boxA.onLeftWall = true;
-                            },
-
-                        }
+                if (boxB.staticEntity) {
+                    // Use the previous frame's box to decide which side was hit
+                    enum Side { LEFT, RIGHT, UP, DOWN };
+                    Side side;
+                    const Rect& pA = boxA.previousCollisionBox;
+                    if (pA.topLeft.y < bBottom && pA.topLeft.y + pA.height > bTop) {
+                        side = (pA.topLeft.x < bLeft) ? RIGHT : LEFT;
                     }
-                    else if (boxA.staticEntity && boxB.staticEntity){
-                        switch (side) {
-                            case DOWN {
-                                locB.loc.y -= overY;
-                                moveB.velocity.y = 0.f;
-                                boxB.onCeiling = true;
-                            },
-                            case UP {
-                                locB.loc.y += overY;
-                                moveB.velocity.y = 0.f;
-                                boxB.onGround = true;
-                            },
-                            case RIGHT {
-                                locB.loc.x += overX;
-                                moveB.velocity.x = 0.f;
-                                boxB.onLeftWall = true;
-                            },
-                            case LEFT {
-                                locB.loc.x -= overX;
-                                moveB.velocity.x = 0.f
-                                boxB.onRightWall = true;
-                            },
-                    }
-                    // both dynamic so cooked
                     else {
-                        // check if horzontal
-                        if (overX > overY) {
-                            if (locB.loc.x <= locA.loc.x) {
-                                locB.loc.x -= overX / 2.f;
-                                locA.loc.x += overX / 2.f;
+                        side = (pA.topLeft.y < bTop) ? UP : DOWN;
+                    }
+
+                    switch (side) {
+                        case DOWN:
+                            locA.loc.y += overY;
+                            moveA.velocity.y *= rest;
+                            boxA.onCeiling = true;
+                            break;
+                        case UP:
+                            locA.loc.y -= overY;
+                            moveA.velocity.y *= rest;
+                            boxA.onGround = true;
+                            if (isPlayer && !wasOnGround) {
+                                engine->GetSoundManager().GetSound("land").play();
                             }
-                            else {
-                                locB.loc.x += overX / 2.f;
-                                locA.loc.x -= overX / 2.f;
-                            }
-                        }
-                        else {
-                            if (locB.loc.y <= locA.loc.y) {
-                                locB.loc.y -= overY / 2.f;
-                                locA.loc.y += overY / 2.f;
-                            }
-                            else {
-                                locB.loc.y += overY / 2.f;
-                                locA.loc.y -= overY / 2.f;
-                            }
+                            break;
+                        case RIGHT:
+                            locA.loc.x -= overX;
+                            moveA.velocity.x *= rest;
+                            boxA.onRightWall = true;
+                            break;
+                        case LEFT:
+                            locA.loc.x += overX;
+                            moveA.velocity.x *= rest;
+                            boxA.onLeftWall = true;
+                            break;
+                    }
+                }
+                else if (entManager.template HasComponent<InputComponent>(id2)) {
+                    continue;  // handled when the player is "A"
+                }
+                else if (isPlayer) {
+                    // player collects dynamic item
+                    entManager.RemoveEntity(id2);
+                    engine->GetSoundManager().GetSound("star").play();
+                    for (const auto& e : entManager) {
+                        if (entManager.template HasComponent<ScoreComponent>(e.GetID())) {
+                            entManager.template GetComponent<ScoreComponent>(e.GetID()).score++;
                         }
                     }
                 }
-
-                
-                
-
+                else {
+                    // both dynamic: each side moves itself half the overlap on its own pass
+                    if (overX < overY) {
+                        locA.loc.x += (aLeft < bLeft ? -overX : overX) / 2.f;
+                    }
+                    else {
+                        locA.loc.y += (aTop < bTop ? -overY : overY) / 2.f;
+                    }
+                }
             }
         }
 
-        return kContinue; 
+        return kContinue;
     }
-};
-
+    };
 }  // namespace ECSEngine

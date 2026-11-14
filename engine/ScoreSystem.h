@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "ScoreComponent.h"
 namespace ECSEngine {
 
@@ -11,40 +13,35 @@ public:
         return name;
     }
 
-    tSystemReturn Run(EngineView<Components...>* engine) override { 
+    tSystemReturn Run(EngineView<Components...>* engine) override {
         auto& entManager = engine->GetEntityManager();
-        for (const auto& entity: entManager) {
+        for (const auto& entity : entManager) {
             EntityID id = entity.GetID();
 
-            if (!entManager.HasComponent<ScoreComponent>(id)) {
+            if (!entManager.template HasComponent<ScoreComponent>(id)) {
                 continue;
             }
 
-            ScoreComponent& score = entManager.GetComponent<MovementComponent>(id);
+            ScoreComponent& score = entManager.template GetComponent<ScoreComponent>(id);
             int actualScore = score.score;
             int hundos = (actualScore / 100) % 10;
             int dozens = (actualScore / 10) % 10;
             int onses = actualScore % 10;
 
-            int std::vector<int> digits = {onses, dozens, hundos};
-            
-            for (int i = 0; i < 2; i++) {
-                entityID id2 = score.digitID[i];
+            std::vector<int> digits = {hundos, dozens, onses};
 
-                if (id2 == NULL) {
+            for (int i = 0; i < 3; i++) {
+                EntityID id2 = score.digitID[i];
+
+                if (!entManager.template HasComponent<SpriteComponent>(id2)) {
                     continue;
                 }
-                if (!entManager.HasComponent<SpriteComponent>(id2)) {
-                    continue;
-                }
-                SpriteComponent sprite = entManager.GETComponent<SpriteComponent>(id2);
-                sprite.textureID = scoreComponent.digitTextureID[digits[i]];
-
-                
+                SpriteComponent& sprite = entManager.template GetComponent<SpriteComponent>(id2);
+                sprite.textureID = score.digitTextureID[digits[i]];
             }
-
+        }
         return kContinue;
-     }
+    }
 };
 
 }  // namespace ECSEngine

@@ -4,6 +4,7 @@
 
 #include "MathUtil.h"
 #include "SpriteManager.h"
+#include "Entity.h"
 
 namespace ECSEngine {
 

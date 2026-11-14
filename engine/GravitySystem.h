@@ -1,5 +1,13 @@
 #pragma once
 
+#include <algorithm>
+#include <string>
+
+#include "CollisionComponent.h"
+#include "LocationComponent.h"
+#include "SoundManager.h"
+#include "SystemManager.h"
+
 namespace ECSEngine
 {
 
@@ -15,29 +23,29 @@ public:
         for (const auto& entity: entManager) {
             EntityID id = entity.GetID();
 
-            if (!entManager.HasComponent<GravityComponent>(id) || !entManager.HasComponent<MovementComponent>(id) || !entManager.HasComponent<CollisionComponent>(id)) {
+            if (!entManager.template HasComponent<GravityComponent>(id) || !entManager.template HasComponent<MovementComponent>(id) || !entManager.template HasComponent<CollisionComponent>(id)) {
                 continue;
             }
 
-			GravityComponent& gravity = entManager.GetComponent<GravityComponent>(id);
-			MovementComponent& move = entManager.GetComponent<MovementComponent>(id);
-			CollisionComponent& box = entManager.GetComponent<CollisionComponent>(id);
+			GravityComponent& gravity = entManager.template GetComponent<GravityComponent>(id);
+			MovementComponent& move = entManager.template GetComponent<MovementComponent>(id);
+			CollisionComponent& box = entManager.template GetComponent<CollisionComponent>(id);
 
 			if (gravity.disabledTimer == 0) {
-				if (box.onGround ) {
-					if (move.velocity.y > 0) {
-						move.velocity.y = 0.f;
-					}
-					
-				}
-				else {
-					move.velocity.y += gravity.acceleration.y;
-				}
+				move.velocity.y += gravity.acceleration.y * (move.velocity.y > 0.f ? 1.5f : 1.f);
+				move.velocity.y = std::min(move.velocity.y, 30.f);
 
+				if (!box.onGround && (box.onLeftWall || box.onRightWall) && move.velocity.y > 3.f) {
+					move.velocity.y = 3.f;
+					auto& wall = engine->GetSoundManager().GetSound("wall");
+					if (wall.getStatus() != sf::Sound::Status::Playing) {
+						wall.play();
+					}
+				}
 			}
 			else {
 				gravity.disabledTimer -= 1;
-			}
+}
 
 
 		}

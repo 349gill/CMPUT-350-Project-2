@@ -3,6 +3,10 @@
 #include <cassert>
 #include <iostream>
 #include <limits>
+#include <array>
+#include <tuple>
+#include <vector>
+#include <string>
 #include <type_traits>
 
 #include "Component.h"
@@ -35,7 +39,7 @@ public:
         componentIndices.fill(kNullComponent);
         mComponentIndices.push_back(componentIndices);
 
-        return id;
+        return index;
     }
 
     bool IsValid(EntityID entity) const {

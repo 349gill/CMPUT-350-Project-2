@@ -16,6 +16,7 @@ namespace ECSEngine {
 // - collision bounding boxes
 struct LocationComponent {
     Point2D loc;
+    LocationComponent(Point2D p) : loc(p) {} 
     LocationComponent(float x = 0.f, float y = 0.f){
         loc = {x, y};
     }
@@ -23,6 +24,7 @@ struct LocationComponent {
 
 struct MovementComponent {
     Point2D velocity;  // Velocity in pixels per second
+    MovementComponent(Point2D v) : velocity(v) {}
     MovementComponent(float dx = 0, float dy = 0) {
         velocity = {dx, dy};
     }

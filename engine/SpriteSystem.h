@@ -31,30 +31,29 @@ public:
 
         for (const Entity& entity: entManager) {
             EntityID id = entity.GetID();
-            if (!entManager.HasComponent<SpriteComponent>(id)) {
+            if (!entManager.template HasComponent<SpriteComponent>(id)) {
                 continue;
             }
 
-            SpriteComponent& spriteComp = entManager.GetComponent<SpriteComponent>(id);
+            SpriteComponent& spriteComp = entManager.template GetComponent<SpriteComponent>(id);
 
             Rect bounds = spriteComp.bounds;
 
-            if (spriteComp.worldSpace) {
-                if (!entManager.HasComponent<LocationComponent>(id)) {
-                    continue;
-                }
-
-                LocationComponent& loc = entManager.GetComponent<LocationComponent>(id);
-
+            if (entManager.template HasComponent<LocationComponent>(id)) {
+                LocationComponent& loc = entManager.template GetComponent<LocationComponent>(id);
                 bounds.topLeft.x += loc.loc.x;
                 bounds.topLeft.y += loc.loc.y;
+            }
+            else if (spriteComp.worldSpace) {
+                continue;
+            }
 
+            if (spriteComp.worldSpace) {
                 bounds = windowManager.WorldToWindow(bounds);
-
             }
 
             sf::Sprite& sprite = spriteManager.GetSprite(spriteComp.textureID);
-            sprite.setPosition(bounds.topLeft.x, bounds.topLeft.y);
+            sprite.setPosition({bounds.topLeft.x, bounds.topLeft.y});
 
             sf::Vector2f sizo = sprite.getLocalBounds().size;
 

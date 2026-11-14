@@ -1,5 +1,10 @@
 #pragma once
 
+#include "CollisionComponent.h"
+#include "InputComponent.h"
+#include "LocationComponent.h"
+#include "SoundManager.h"
+#include "SystemManager.h"
 #include "Entity.h"
 #include "Keyboard.h"
 #include <algorithm>
@@ -11,7 +16,8 @@ const float kDashVelocity = 50;
 const float kJumpVelocity = 25;
 const float kGroundRunAcceleration = 5;
 const float kAirRunAcceleration = 4;
-const float kDashInterval = 25;
+const int kDashInterval = 60;
+const int kDashFrames = 10;
 
 template <typename... Components>
 class InputSystem : public System<Components...> {
@@ -26,61 +32,62 @@ public:
         for (const auto& entity: entManager) {
             EntityID id = entity.GetID();
 
-            if (!entManager.HasComponent<InputComponent>(id) || !entManager.HasComponent<MovementComponent>(id)) {
+            if (!entManager.template HasComponent<InputComponent>(id) || !entManager.template HasComponent<MovementComponent>(id)) {
                 continue;
             }
-            InputComponent& input = entManager.GetComponent<InputComponent>(id);
-            MovementComponent& move = entManager.GetComponent<MovementComponent>(id);
-            CollisionComponent& box = entManager.GetComponent<CollisionComponent>(id);
-
+            InputComponent& input = entManager.template GetComponent<InputComponent>(id);
+            MovementComponent& move = entManager.template GetComponent<MovementComponent>(id);
+            CollisionComponent& box = entManager.template GetComponent<CollisionComponent>(id);
+            
             bool lP = input.keydown.test(Key::Left);
             bool rP = input.keydown.test(Key::Right);
             bool dP = input.keydown.test(Key::Down);
             bool jP = input.keydown.test(Key::Z) && !input.lastKeydown.test(Key::Z);
             bool cP = input.keydown.test(Key::C);
+            bool jumpReleased = !input.keydown.test(Key::Z) && input.lastKeydown.test(Key::Z);
 
-            bool jPP = input.keydown.test(Key::Z) && !input.lastKeydown.test(Key::Z);
-            bool cPP = input.keydown.test(Key::C) && !input.lastKeydown.test(Key::C);
+            float acceleration = box.onGround ? kGroundRunAcceleration : kAirRunAcceleration;
 
-            bool jumpReleased =!input.keydown.test(Key::Z) &&input.lastKeydown.test(Key::Z);
-            
-            float acceleration = box.onGround? kGroundRunAcceleration: kAirRunAcceleration;
+            input.lastDash += 1;
 
-            input.lastDash += 1.f;
-
-            // horizontal movememnet
-            if (lP && !rP) {
+            if (input.lastDash >= kDashFrames) {  // no steering while dashing
+                if (lP && !rP) {
                     move.velocity.x -= acceleration;
                 }
-            else if (rP && !lP) {
+                else if (rP && !lP) {
                     move.velocity.x += acceleration;
                 }
-            else {
-                    // Decelerate when no direction is held.
+                else {
                     float resist = 3.f;
-
                     if (move.velocity.x > 0.f) {
                         move.velocity.x = std::max(0.f, move.velocity.x - resist);
                     }
                     else if (move.velocity.x < 0.f) {
                         move.velocity.x = std::min(0.f, move.velocity.x + resist);
                     }
-
-                move.velocity.x = std::clamp(move.velocity.x, -kMaxRunVelocity,kMaxRunVelocity);
                 }
-            
+                move.velocity.x = std::clamp(move.velocity.x, -kMaxRunVelocity, kMaxRunVelocity);
+            }
+
             // Jumps
             if (jP) {
+                bool jumped = true;
                 if (box.onGround) {
                     move.velocity.y = -kJumpVelocity;
                 }
                 else if (box.onLeftWall && lP && move.velocity.y > 0.f) {
-                    move.velocity.x = kAirRunAcceleration;
+                    move.velocity.x = kMaxRunVelocity;
                     move.velocity.y = -kJumpVelocity;
                 }
                 else if (box.onRightWall && rP && move.velocity.y > 0.f) {
-                    move.velocity.x = -kAirRunAcceleration;
+                    move.velocity.x = -kMaxRunVelocity;
                     move.velocity.y = -kJumpVelocity;
+                }
+                else {
+                    jumped = false;
+                }
+                if (jumped) {
+                    engine->GetSoundManager().GetSound("jump").play();
                 }
             }
 
@@ -88,27 +95,19 @@ public:
                 move.velocity.y *= 0.5f;
             }
 
-            // Dash
-            if (cP && input.lastDash >= kDashInterval) {
-                bool dashed = false;
-
-                if (lP && !rP) {
-                    move.velocity.x = -kDashVelocity;
-                    dashed = true;
+            // Dash (once per second)
+            if (cP && input.lastDash >= kDashInterval && lP != rP) {
+                move.velocity.x = lP ? -kDashVelocity : kDashVelocity;
+                move.velocity.y = 0.f;
+                if (entManager.template HasComponent<GravityComponent>(id)) {
+                    entManager.template GetComponent<GravityComponent>(id).disabledTimer = kDashFrames;
                 }
-                else if (rP && !lP) {
-                    move.velocity.x = kDashVelocity;
-                    dashed = true;
-                }
-
-                if (dashed) {
-                    input.lastDash = 0;
-                }
+                input.lastDash = 0;
             }
 
             // fast fall
             if (dP && !box.onGround && move.velocity.y > 0.f) {
-                move.velocity.y += -9.81;
+                move.velocity.y += 1.f;
             }
 
             input.lastKeydown = input.keydown;

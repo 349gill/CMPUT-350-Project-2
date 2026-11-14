@@ -8,6 +8,8 @@
 #include "SystemManager.h"
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Texture.hpp>
+#include "CameraComponent.h"
+#include <algorithm>
 
 namespace ECSEngine {
 
@@ -28,19 +30,19 @@ public:
         for (const auto& entity: entManager) {
             EntityID id = entity.GetID();
 
-            if (!entManager.HasComponent<CameraComponent>(id) || !entManager.HasComponent<CameraFollower>(id)) {
+            if (!entManager.template HasComponent<CameraComponent>(id) || !entManager.template HasComponent<CameraFollower>(id)) {
                 continue;
             }
 
-            CameraComponent& camera = entManager.GetComponent<CameraComponent>(id);
-            CameraFollower& follower = entManager.GetComponent<CameraFollower>(id);
+            CameraComponent& camera = entManager.template GetComponent<CameraComponent>(id);
+            CameraFollower& follower = entManager.template GetComponent<CameraFollower>(id);
             EntityID targetID = follower.entityID;
 
-            if (!entManager.HasComponent<LocationComponent>(targetID)) {
+            if (!entManager.template HasComponent<LocationComponent>(targetID)) {
                 continue;
             }
 
-            LocationComponent& player = entManager.GetComponent<LocationComponent>(targetID);
+            LocationComponent& player = entManager.template GetComponent<LocationComponent>(targetID);
             float scale = camera.worldUnitsPerPixel;
 
             // horizontal screen pos
@@ -73,7 +75,7 @@ public:
 
             window.SetWorldCenter(camera.position);
             window.SetWorldScale(scale);
-
+        }
         return kContinue; 
     }
 };

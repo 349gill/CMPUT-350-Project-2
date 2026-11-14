@@ -7,11 +7,12 @@
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/Window/Keyboard.hpp>
+#include "Entity.h"
 
 namespace ECSEngine {
 
 struct InputComponent {
-    InputComponent(EntityID whichEntity) : entity(whichEntity), lastDash(0) {}
+    InputComponent(EntityID whichEntity) : entity(whichEntity), lastDash(1000) {}
     EntityID entity;
     int lastDash;
     std::bitset<sf::Keyboard::ScancodeCount> keydown;

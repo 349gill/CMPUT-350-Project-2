@@ -1,4 +1,6 @@
 #include <fstream>
+#include <iostream>
+#include <memory>
 #include <unordered_map>
 
 #include "CameraSystem.h"
@@ -21,7 +23,7 @@
 #include "SpriteManager.h"
 #include "SpriteSystem.h"
 
-std::string gResourcePath = "../assets/";
+std::string gResourcePath = "../../assets/";
 #define COMPONENTS                                                                             \
     ECSEngine::LocationComponent, ECSEngine::MovementComponent, ECSEngine::CollisionComponent, \
         ECSEngine::SpriteComponent, ECSEngine::SpawnComponent, ECSEngine::CameraComponent,     \
@@ -35,19 +37,19 @@ using ECSEngine::Rect;
 using ECSEngine::SpriteID;
 
 const std::string kPlayerSheet = "spritesheet-characters-default.png";
-const Rect kPlayerSource = {{0.0f, 0.0f}, 64, 64}; // Position of the player
+const Rect kPlayerSource = {{22.0f, 106.0f}, 100, 128}; // Position of the player
 const Rect kPlayerBounds = {{0.0f, 0.0f}, 48, 64}; // Player sprite bounds
 const Rect kPlayerCollision = {{6.0f, 4.0f}, 36, 60}; // Player collision box
-const Point2D kPlayerStart(192.0f, 500.0f);
+const Point2D kPlayerStart(800.0f, 500.0f);
 const float kGravity = 1.0f;
 
 const std::string kStarSheet = "spritesheet-tiles-default.png";
-const Rect kStarSource = {{0.0f, 0.0f}, 64, 64}; // Star position
+const Rect kStarSource = {{896.0f, 448.0f}, 64, 64}; // Star position
 const Rect kStarBounds = {{0.0f, 0.0f}, 48, 48}; // Star sprite bounds
 
 const std::string kDigitSheet = "spritesheet-tiles-default.png";
 
-const char kSpikeChar = 'o';
+const char kSpikeChar = 'x';
 const char kSpawnerChar = 'S';
 const int kSpawnPeriod = 120; // 120 frames (2 seconds)
 const int kSpawnCount = 30;
@@ -70,6 +72,10 @@ ECSEngine::CollisionComponent MakeCollision(
 
 void LoadMap(Engine& engine, const std::string& path, const std::string& file) {
     std::ifstream in(path + file);
+    if (!in) {
+        std::cout << "Could not open map: " << path + file << "\n";
+        return;
+    }
 
     auto& em = engine.GetEntityManager();
 
@@ -104,7 +110,7 @@ void LoadMap(Engine& engine, const std::string& path, const std::string& file) {
     for (int row = 0; row < gridH; row++) {
         std::string line;
         in >> line;
-        for (int col = 0; col < gridW; col++) {
+        for (int col = 0; col < gridW && col < static_cast<int>(line.size()); col++) {
             auto it = dictionary.find(line[col]);
             if (it == dictionary.end()) continue;
 
@@ -139,17 +145,17 @@ int main(int argc, char* argv[]) {
 
     // Load sounds
     auto& sounds = engine.GetSoundManager();
-    sounds.RegisterSound(gResourcePath + "jump.wav", "jump");
-    sounds.RegisterSound(gResourcePath + "land.wav", "land");
-    sounds.RegisterSound(gResourcePath + "star.wav", "star");
-    sounds.RegisterSound(gResourcePath + "wall.wav", "wall");
+    sounds.RegisterSound(gResourcePath + "jump.ogg", "jump");
+    sounds.RegisterSound(gResourcePath + "land.ogg", "land");
+    sounds.RegisterSound(gResourcePath + "star.ogg", "star");
+    sounds.RegisterSound(gResourcePath + "wall.ogg", "wall");
 
     // Load maps
     gStarSprite = sprites.RegisterTexture(gResourcePath + kStarSheet, kStarSource);
-    LoadMap(engine, gResourcePath, "background_map.txt");
-    LoadMap(engine, gResourcePath, "object_map.txt");
+    LoadMap(engine, gResourcePath, "sky.map");
+    LoadMap(engine, gResourcePath, "world.map");
 
-    Point2D starLoc(2080.0f, 200.0f);
+    Point2D starLoc(400.0f, 300.0f);
     EntityID star = em.CreateEntity("star");
     em.AddComponent(star, ECSEngine::LocationComponent{starLoc});
     em.AddComponent(star, ECSEngine::SpriteComponent{gStarSprite, kStarBounds, true});
@@ -170,7 +176,8 @@ int main(int argc, char* argv[]) {
     ECSEngine::ScoreComponent score;
     score.score = 0;
     for (int i = 0; i < 10; i++) {
-        score.digitTextureID[i] = sprites.RegisterTexture(gResourcePath + kDigitSheet, Rect{{i * 64.0f, 0.0f}, 64, 64});
+        score.digitTextureID[i] = sprites.RegisterTexture(
+            gResourcePath + kDigitSheet, Rect{{832.0f, 990.0f - i * 64.0f}, 64, 64});
     }
 
     for (int i = 0; i < 3; i++) {

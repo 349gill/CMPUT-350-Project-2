@@ -1,5 +1,13 @@
 #pragma once
 
+#include <algorithm>
+#include <string>
+
+#include "CollisionComponent.h"
+#include "LocationComponent.h"
+#include "SoundManager.h"
+#include "SystemManager.h"
+
 namespace ECSEngine {
 
 template <typename... Components>
@@ -15,12 +23,12 @@ public:
         for (const auto& entity: entManager) {
             EntityID id = entity.GetID();
 
-            if (!entManager.HasComponent<MovementComponent>(id) || !entManager.HasComponent<LocationComponent>(id)) {
+            if (!entManager.template HasComponent<MovementComponent>(id) || !entManager.template HasComponent<LocationComponent>(id)) {
                 continue;
             }
 
-            MovementComponent& move = entManager.GetComponent<MovementComponent>(id);
-            LocationComponent& loc = entManager.GetComponent<LocationComponent>(id);
+            MovementComponent& move = entManager.template GetComponent<MovementComponent>(id);
+            LocationComponent& loc = entManager.template GetComponent<LocationComponent>(id);
 
             loc.loc.x += move.velocity.x;
             loc.loc.y += move.velocity.y;

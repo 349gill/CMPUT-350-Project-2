@@ -3,7 +3,8 @@
 #include <unordered_map>
 
 #include "MathUtil.h"
-#include <string.h>
+#include <string>
+#include "Entity.h"
 #include "SpriteManager.h"
 
 namespace ECSEngine {
